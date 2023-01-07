@@ -70,7 +70,24 @@ class GameScene: SKScene {
         bubble.physicsBody?.angularVelocity = Double.random(in: 0...1)
     }
     func pop(_ node: SKSpriteNode) {
-        // TBD
+        guard let index = bubbles.firstIndex(of: node) else { return }
+        bubbles.remove(at: index)
+        node.physicsBody = nil
+        node.name = nil
+        
+        let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+        let scaleUp = SKAction.scale(by: 1.5, duration: 0.3)
+        scaleUp.timingMode = .easeOut
+        let group = SKAction.group([fadeOut, scaleUp])
+        let sequence = SKAction.sequence([group, SKAction.removeFromParent()])
+        node.run(sequence)
+        run(SKAction.playSoundFileNamed("pop.wave", waitForCompletion: false))
+        
+        if bubbles.count == 0 {
+            bubbleTimer?.invalidate()
+            let gameOverNode = SKLabelNode(text: "Game Over!")
+            
+        }
     }
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
