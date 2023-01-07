@@ -6,86 +6,85 @@
 //
 
 import SpriteKit
-import GameplayKit
 
 class GameScene: SKScene {
+    var bubbleTextures = [SKTexture]()
+    var currentBubbleTexture = 0
+    var maximumNumber = 1
+    var bubbles = [SKSpriteNode]()
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
+    var bubbleTimer: Timer?
+    
+    func createBubble() {
+        let bubble = SKSpriteNode(texture: bubbleTextures[currentBubbleTexture])
+        bubble.name = String(maximumNumber)
+        bubble.zPosition = 1
+        
+        let label = SKLabelNode(fontNamed: "HelveticaNeue-Light")
+        label.text = bubble.name
+        label.color = NSColor.white
+        label.fontSize = 64
+        label.verticalAlignmentMode = .center
+        label.zPosition = 2
+        
+        bubble.addChild(label)
+        addChild(bubble)
+        bubbles.append(bubble)
+        
+        let xPos = Int.random(in: 0 ..< 800)
+        let yPos = Int.random(in: 0 ..< 600)
+        bubble.position = CGPoint(x: xPos, y: yPos)
+        
+        
+        
+        configurePhysics(for: bubble)
+        nextBubble()
+    }
+    func nextBubble() {
+        currentBubbleTexture += 1
+        if currentBubbleTexture == bubbleTextures.count {
+            currentBubbleTexture = 0
+        }
+        
+        maximumNumber += Int.random(in: 1...3)
+        let strMaximumNumber = String(maximumNumber)
+        if strMaximumNumber.last! == "6" {
+            maximumNumber += 1
+        }
+        if strMaximumNumber.last! == "9" {
+            maximumNumber += 1
+        }
+    }
+    func configurePhysics(for bubble: SKSpriteNode) {
+        bubble.physicsBody = SKPhysicsBody(circleOfRadius: bubble.size.width / 2)
+        bubble.physicsBody?.linearDamping = 0
+        bubble.physicsBody?.angularDamping = 0
+        bubble.physicsBody?.restitution = 1
+        bubble.physicsBody?.friction = 0
+        
+        let motionX = Double.random(in: -200...200)
+        let motionY = Double.random(in: -200...200)
+        bubble.physicsBody?.velocity = CGVector(dx: motionX, dy: motionY)
+        bubble.physicsBody?.angularVelocity = Double.random(in: 0...1)
+    }
     
     override func didMove(to view: SKView) {
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleBlue"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleCyan"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleGray"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleGreen"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleOrange"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubblePink"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubblePurple"))
+        bubbleTextures.append(SKTexture(imageNamed: "bubbleRed"))
         
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
+        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        physicsWorld.gravity = CGVector.zero
+        for _ in 1...8 {
+            createBubble()
         }
-        
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
-        
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
-            
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
+        bubbleTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] timer in
+            self?.createBubble()
         }
-    }
-    
-    
-    func touchDown(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.green
-            self.addChild(n)
-        }
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.blue
-            self.addChild(n)
-        }
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.red
-            self.addChild(n)
-        }
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        self.touchDown(atPoint: event.location(in: self))
-    }
-    
-    override func mouseDragged(with event: NSEvent) {
-        self.touchMoved(toPoint: event.location(in: self))
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        self.touchUp(atPoint: event.location(in: self))
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case 0x31:
-            if let label = self.label {
-                label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-            }
-        default:
-            print("keyDown: \(event.characters!) keyCode: \(event.keyCode)")
-        }
-    }
-    
-    
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
     }
 }
