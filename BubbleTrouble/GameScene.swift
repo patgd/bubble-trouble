@@ -35,7 +35,9 @@ class GameScene: SKScene {
         let yPos = Int.random(in: 0 ..< 600)
         bubble.position = CGPoint(x: xPos, y: yPos)
         
-        
+        bubble.setScale(Double.random(in: 0.4...1))
+        bubble.alpha = 0
+        bubble.run(SKAction.fadeIn(withDuration: 0.5))
         
         configurePhysics(for: bubble)
         nextBubble()
@@ -66,6 +68,26 @@ class GameScene: SKScene {
         let motionY = Double.random(in: -200...200)
         bubble.physicsBody?.velocity = CGVector(dx: motionX, dy: motionY)
         bubble.physicsBody?.angularVelocity = Double.random(in: 0...1)
+    }
+    func pop(_ node: SKSpriteNode) {
+        // TBD
+    }
+    override func mouseDown(with event: NSEvent) {
+        let location = event.location(in: self)
+        let clickedNodes = nodes(at: location).filter { $0.name != nil }
+        guard clickedNodes.count != 0 else { return }
+        
+        let lowestBubble = bubbles.min { Int($0.name!)! < Int($1.name!)! }
+        guard let bestNumber = lowestBubble?.name else { return }
+        
+        for node in clickedNodes {
+            if node.name == bestNumber {
+                pop(node as! SKSpriteNode)
+                return
+            }
+        }
+        createBubble()
+        createBubble()
     }
     
     override func didMove(to view: SKView) {
